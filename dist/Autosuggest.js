@@ -607,7 +607,7 @@ var Autosuggest = (function (_Component) {
               section.sectionName
             ) : null;
 
-            return section.suggestions.length === 0 ? null : _react2['default'].createElement(
+            return section.suggestions.length === 0 ? { sectionName: sectionName } : _react2['default'].createElement(
               'div',
               _extends({}, theme('section-' + sectionIndex, 'section'), {
                 key: 'section-' + sectionIndex }),

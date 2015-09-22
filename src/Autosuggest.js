@@ -521,7 +521,7 @@ export default class Autosuggest extends Component {
               </div>
             ) : null;
 
-            return section.suggestions.length === 0 ? null : (
+            return section.suggestions.length === 0 ? {sectionName} : (
               <div {...theme('section-' + sectionIndex, 'section')}
                    key={'section-' + sectionIndex}>
                 {sectionName}
