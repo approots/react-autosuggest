@@ -78,7 +78,10 @@ var Autosuggest = (function (_Component) {
         suggestionIsFocused: 'react-autosuggest__suggestion--focused',
         section: 'react-autosuggest__suggestions-section',
         sectionName: 'react-autosuggest__suggestions-section-name',
-        sectionSuggestions: 'react-autosuggest__suggestions-section-suggestions'
+        sectionSuggestions: 'react-autosuggest__suggestions-section-suggestions',
+
+        // TODO added
+        suggestionIsDisabled: 'react-autosuggest__suggestion--disabled'
       }
     },
     enumerable: true
@@ -116,6 +119,13 @@ var Autosuggest = (function (_Component) {
     // componentWillReceiveProps() when Up or Down is pressed.
     this.justPressedEsc = false; // Helps not to call handleValueChange() in
     // componentWillReceiveProps() when ESC is pressed.
+    /*
+     // My editor doesn't like this bind syntax
+     this.onInputChange = ::this.onInputChange;
+     this.onInputKeyDown = ::this.onInputKeyDown;
+     this.onInputFocus = ::this.onInputFocus;
+     this.onInputBlur = ::this.onInputBlur;
+     */
     this.onInputChange = this.onInputChange.bind(this);
     this.onInputKeyDown = this.onInputKeyDown.bind(this);
     this.onInputFocus = this.onInputFocus.bind(this);
@@ -134,14 +144,30 @@ var Autosuggest = (function (_Component) {
       }
     }
   }, {
+    key: 'getEnabledIndexes',
+    value: function getEnabledIndexes(suggestions) {
+      var indexes = [];
+      suggestions.forEach(function (suggestion, index) {
+        if (!suggestion.isDisabled) {
+          indexes.push(index);
+        }
+      });
+      return indexes;
+    }
+
+    // It's the iterator that determines if an entry is actionable by returning the index of the next actionable item.
+  }, {
     key: 'resetSectionIterator',
     value: function resetSectionIterator(suggestions) {
+      var _this = this;
+
       if (this.isMultipleSections(suggestions)) {
         _sectionIterator2['default'].setData(suggestions.map(function (suggestion) {
-          return suggestion.suggestions.length;
-        }));
+          return suggestion.suggestions === null ? [] : _this.getEnabledIndexes(suggestion.suggestions);
+        }), true);
       } else {
-        _sectionIterator2['default'].setData(suggestions === null ? [] : suggestions.length);
+        //sectionIterator.setData(suggestions === null ? [] : suggestions.length);
+        _sectionIterator2['default'].setData(suggestions === null ? [] : this.getEnabledIndexes(suggestions));
       }
     }
   }, {
@@ -174,7 +200,7 @@ var Autosuggest = (function (_Component) {
   }, {
     key: 'showSuggestions',
     value: function showSuggestions(input) {
-      var _this = this;
+      var _this2 = this;
 
       var cacheKey = input.toLowerCase();
 
@@ -187,22 +213,22 @@ var Autosuggest = (function (_Component) {
       } else {
         this.suggestionsFn(input, function (error, suggestions) {
           // If input value changed, suggestions are not relevant anymore.
-          if (_this.lastSuggestionsInputValue !== input) {
+          if (_this2.lastSuggestionsInputValue !== input) {
             return;
           }
 
           if (error) {
             throw error;
           } else {
-            if (!_this.suggestionsExist(suggestions)) {
+            if (!_this2.suggestionsExist(suggestions)) {
               suggestions = null;
             }
 
-            if (_this.props.cache) {
-              _this.cache[cacheKey] = suggestions;
+            if (_this2.props.cache) {
+              _this2.cache[cacheKey] = suggestions;
             }
 
-            _this.setSuggestionsState(suggestions);
+            _this2.setSuggestionsState(suggestions);
           }
         });
       }
@@ -315,7 +341,7 @@ var Autosuggest = (function (_Component) {
   }, {
     key: 'focusOnSuggestionUsingKeyboard',
     value: function focusOnSuggestionUsingKeyboard(direction, suggestionPosition) {
-      var _this2 = this;
+      var _this3 = this;
 
       var _suggestionPosition = _slicedToArray(suggestionPosition, 2);
 
@@ -352,7 +378,7 @@ var Autosuggest = (function (_Component) {
       this.setState(newState);
 
       setTimeout(function () {
-        return _this2.justPressedUpDown = false;
+        return _this3.justPressedUpDown = false;
       });
     }
   }, {
@@ -385,7 +411,7 @@ var Autosuggest = (function (_Component) {
   }, {
     key: 'onInputKeyDown',
     value: function onInputKeyDown(event) {
-      var _this3 = this;
+      var _this4 = this;
 
       var newState = undefined;
 
@@ -397,6 +423,8 @@ var Autosuggest = (function (_Component) {
           }
 
           this.setSuggestionsState(null);
+          // TODO I put event.preventDefault(); here to prevent submission. Is ok?
+          event.preventDefault();
           break;
 
         case 27:
@@ -424,7 +452,7 @@ var Autosuggest = (function (_Component) {
           this.setState(newState);
 
           setTimeout(function () {
-            return _this3.justPressedEsc = false;
+            return _this4.justPressedEsc = false;
           });
           break;
 
@@ -502,7 +530,7 @@ var Autosuggest = (function (_Component) {
   }, {
     key: 'onSuggestionMouseDown',
     value: function onSuggestionMouseDown(sectionIndex, suggestionIndex, event) {
-      var _this4 = this;
+      var _this5 = this;
 
       var suggestionValue = this.getSuggestionValue(sectionIndex, suggestionIndex);
 
@@ -523,8 +551,8 @@ var Autosuggest = (function (_Component) {
       }, function () {
         // This code executes after the component is re-rendered
         setTimeout(function () {
-          (0, _reactDom.findDOMNode)(_this4.refs.input).focus();
-          _this4.justClickedOnSuggestion = false;
+          (0, _reactDom.findDOMNode)(_this5.refs.input).focus();
+          _this5.justClickedOnSuggestion = false;
         });
       });
     }
@@ -558,36 +586,48 @@ var Autosuggest = (function (_Component) {
   }, {
     key: 'renderSuggestionsList',
     value: function renderSuggestionsList(theme, suggestions, sectionIndex) {
-      var _this5 = this;
+      var _this6 = this;
 
       return suggestions.map(function (suggestion, suggestionIndex) {
-        var styles = theme(suggestionIndex, 'suggestion', sectionIndex === _this5.state.focusedSectionIndex && suggestionIndex === _this5.state.focusedSuggestionIndex && 'suggestionIsFocused');
-        var suggestionRef = _this5.getSuggestionRef(sectionIndex, suggestionIndex);
+        var styles = theme(suggestionIndex, 'suggestion', sectionIndex === _this6.state.focusedSectionIndex && suggestionIndex === _this6.state.focusedSuggestionIndex && 'suggestionIsFocused', suggestion.isDisabled && 'suggestionIsDisabled');
+        var suggestionRef = _this6.getSuggestionRef(sectionIndex, suggestionIndex);
 
-        return _react2['default'].createElement(
-          'li',
-          _extends({ id: _this5.getSuggestionId(sectionIndex, suggestionIndex)
-          }, styles, {
-            role: 'option',
-            ref: suggestionRef,
-            key: suggestionRef,
-            onMouseEnter: function () {
-              return _this5.onSuggestionMouseEnter(sectionIndex, suggestionIndex);
-            },
-            onMouseLeave: function () {
-              return _this5.onSuggestionMouseLeave(sectionIndex, suggestionIndex);
-            },
-            onMouseDown: function (event) {
-              return _this5.onSuggestionMouseDown(sectionIndex, suggestionIndex, event);
-            } }),
-          _this5.renderSuggestionContent(suggestion)
-        );
+        if (suggestion.isDisabled) {
+          return _react2['default'].createElement(
+            'li',
+            _extends({ id: _this6.getSuggestionId(sectionIndex, suggestionIndex)
+            }, styles, {
+              role: 'option',
+              ref: suggestionRef,
+              key: suggestionRef }),
+            _this6.renderSuggestionContent(suggestion)
+          );
+        } else {
+          return _react2['default'].createElement(
+            'li',
+            _extends({ id: _this6.getSuggestionId(sectionIndex, suggestionIndex)
+            }, styles, {
+              role: 'option',
+              ref: suggestionRef,
+              key: suggestionRef,
+              onMouseEnter: function () {
+                return _this6.onSuggestionMouseEnter(sectionIndex, suggestionIndex);
+              },
+              onMouseLeave: function () {
+                return _this6.onSuggestionMouseLeave(sectionIndex, suggestionIndex);
+              },
+              onMouseDown: function (event) {
+                return _this6.onSuggestionMouseDown(sectionIndex, suggestionIndex, event);
+              } }),
+            _this6.renderSuggestionContent(suggestion)
+          );
+        }
       });
     }
   }, {
     key: 'renderSuggestions',
     value: function renderSuggestions(theme) {
-      var _this6 = this;
+      var _this7 = this;
 
       if (this.state.suggestions === null) {
         return null;
@@ -607,7 +647,7 @@ var Autosuggest = (function (_Component) {
               section.sectionName
             ) : null;
 
-            return section.suggestions.length === 0 ? { sectionName: sectionName } : _react2['default'].createElement(
+            return section.suggestions.length === 0 ? sectionName : _react2['default'].createElement(
               'div',
               _extends({}, theme('section-' + sectionIndex, 'section'), {
                 key: 'section-' + sectionIndex }),
@@ -615,7 +655,7 @@ var Autosuggest = (function (_Component) {
               _react2['default'].createElement(
                 'ul',
                 theme('sectionSuggestions-' + sectionIndex, 'sectionSuggestions'),
-                _this6.renderSuggestionsList(theme, section.suggestions, sectionIndex)
+                _this7.renderSuggestionsList(theme, section.suggestions, sectionIndex)
               )
             );
           })

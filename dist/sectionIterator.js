@@ -1,45 +1,19 @@
-'use strict';
+"use strict";
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
 
 var data = undefined,
     multipleSections = undefined;
 
 function setData(newData) {
+  var hasMultipleSections = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+
   data = newData;
-  multipleSections = typeof data === 'object';
-}
-
-function nextNonEmptySectionIndex(sectionIndex) {
-  if (sectionIndex === null) {
-    sectionIndex = 0;
-  } else {
-    sectionIndex++;
-  }
-
-  while (sectionIndex < data.length && data[sectionIndex] === 0) {
-    sectionIndex++;
-  }
-
-  return sectionIndex === data.length ? null : sectionIndex;
-}
-
-function prevNonEmptySectionIndex(sectionIndex) {
-  if (sectionIndex === null) {
-    sectionIndex = data.length - 1;
-  } else {
-    sectionIndex--;
-  }
-
-  while (sectionIndex >= 0 && data[sectionIndex] === 0) {
-    sectionIndex--;
-  }
-
-  return sectionIndex === -1 ? null : sectionIndex;
+  multipleSections = hasMultipleSections;
 }
 
 function next(position) {
@@ -49,28 +23,86 @@ function next(position) {
   var itemIndex = _position[1];
 
   if (multipleSections) {
-    if (itemIndex === null || itemIndex === data[sectionIndex] - 1) {
-      sectionIndex = nextNonEmptySectionIndex(sectionIndex);
+    return getNextSectionIndexes(sectionIndex, itemIndex);
+  }
 
-      if (sectionIndex === null) {
-        return [null, null];
+  return [null, getNextIndex(data, itemIndex)];
+}
+
+function getNextSectionIndexes(sectionIndex, itemIndex) {
+  if (sectionIndex === null) {
+    sectionIndex = 0;
+  }
+
+  while (sectionIndex < data.length) {
+    var section = data[sectionIndex];
+    if (section.length) {
+      var nextIndex = getNextIndex(section, itemIndex);
+      if (nextIndex !== null) {
+        return [sectionIndex, nextIndex];
       }
-
-      return [sectionIndex, 0];
     }
-
-    return [sectionIndex, itemIndex + 1];
+    // If no nextIndex found in first call to getNextIndex,
+    // then set itemIndex to null and let subsequent calls start the search from the bottom of the next section.
+    itemIndex = null;
+    sectionIndex++;
   }
 
-  if (data === 0 || itemIndex === data - 1) {
-    return [null, null];
+  return [null, null];
+}
+
+function getPrevSectionIndexes(sectionIndex, itemIndex) {
+  if (sectionIndex === null) {
+    sectionIndex = data.length - 1;
   }
 
+  while (sectionIndex >= 0) {
+    var section = data[sectionIndex];
+    if (section.length) {
+      var prevIndex = getPrevIndex(section, itemIndex);
+      if (prevIndex !== null) {
+        return [sectionIndex, prevIndex];
+      }
+    }
+    // If no prevIndex found in first call to getPrevIndex,
+    // then set itemIndex to null and let subsequent calls start the search from the top of the next section.
+    itemIndex = null;
+    sectionIndex--;
+  }
+
+  return [null, null];
+}
+
+function getPrevIndex(section, itemIndex) {
+  if (!section.length) {
+    return null;
+  }
+
+  // Return the last item.
   if (itemIndex === null) {
-    return [null, 0];
+    // return last index (index of last enabled suggestion)
+    return section[section.length - 1];
   }
 
-  return [null, itemIndex + 1];
+  // Return the previous item.
+  var index = section.indexOf(itemIndex);
+  return index > 0 ? section[index - 1] : null;
+}
+
+function getNextIndex(section, itemIndex) {
+  if (!section.length) {
+    return null;
+  }
+
+  // return the first item
+  if (itemIndex === null) {
+    // return first index (index of first enabled suggestion)
+    return section[0];
+  }
+
+  // return the next item
+  var index = section.indexOf(itemIndex);
+  return index !== -1 && section.length > index + 1 ? section[index + 1] : null;
 }
 
 function prev(position) {
@@ -80,38 +112,20 @@ function prev(position) {
   var itemIndex = _position2[1];
 
   if (multipleSections) {
-    if (itemIndex === null || itemIndex === 0) {
-      sectionIndex = prevNonEmptySectionIndex(sectionIndex);
-
-      if (sectionIndex === null) {
-        return [null, null];
-      }
-
-      return [sectionIndex, data[sectionIndex] - 1];
-    }
-
-    return [sectionIndex, itemIndex - 1];
+    return getPrevSectionIndexes(sectionIndex, itemIndex);
   }
 
-  if (data === 0 || itemIndex === 0) {
-    return [null, null];
-  }
-
-  if (itemIndex === null) {
-    return [null, data - 1];
-  }
-
-  return [null, itemIndex - 1];
+  return [null, getPrevIndex(data, itemIndex)];
 }
 
 function isLast(position) {
   return next(position)[1] === null;
 }
 
-exports['default'] = {
+exports["default"] = {
   setData: setData,
   next: next,
   prev: prev,
   isLast: isLast
 };
-module.exports = exports['default'];
+module.exports = exports["default"];
