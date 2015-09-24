@@ -12,6 +12,7 @@ export default class Autosuggest extends Component {
     suggestionRenderer: PropTypes.func,     // Function that renders a given suggestion (must be implemented when suggestions are objects)
     suggestionValue: PropTypes.func,        // Function that maps suggestion object to input value (must be implemented when suggestions are objects)
     showWhen: PropTypes.func,               // Function that determines whether to show suggestions or not
+    onInputEnterKey: PropTypes.func,
     onSuggestionSelected: PropTypes.func,   // This function is called when suggestion is selected via mouse click or Enter
     onSuggestionFocused: PropTypes.func,    // This function is called when suggestion is focused via mouse hover or Up/Down keys
     onSuggestionUnfocused: PropTypes.func,  // This function is called when suggestion is unfocused via mouse hover or Up/Down keys
@@ -24,6 +25,7 @@ export default class Autosuggest extends Component {
 
   static defaultProps = {
     showWhen: input => input.trim().length > 0,
+    onInputEnterKey: () => {},
     onSuggestionSelected: () => {},
     onSuggestionFocused: () => {},
     onSuggestionUnfocused: () => {},
@@ -39,8 +41,6 @@ export default class Autosuggest extends Component {
       section: 'react-autosuggest__suggestions-section',
       sectionName: 'react-autosuggest__suggestions-section-name',
       sectionSuggestions: 'react-autosuggest__suggestions-section-suggestions',
-
-      // TODO added
       suggestionIsDisabled: 'react-autosuggest__suggestion--disabled'
     }
   }
@@ -119,7 +119,6 @@ export default class Autosuggest extends Component {
           true
       );
     } else {
-      //sectionIterator.setData(suggestions === null ? [] : suggestions.length);
       sectionIterator.setData(suggestions === null ? [] : this.getEnabledIndexes(suggestions));
     }
   }
@@ -314,6 +313,11 @@ export default class Autosuggest extends Component {
     setTimeout(() => this.justPressedUpDown = false);
   }
 
+  onInputEnterKey(event) {
+    this.onSuggestionUnfocused();
+    this.props.onInputEnterKey(event);
+  }
+
   onSuggestionSelected(event) {
     const focusedSuggestion = this.getFocusedSuggestion();
 
@@ -345,11 +349,12 @@ export default class Autosuggest extends Component {
       case 13: // Enter
         if (this.state.valueBeforeUpDown !== null && this.suggestionIsFocused()) {
           this.onSuggestionSelected(event);
+        } else {
+          this.onInputEnterKey(event);
         }
 
         this.setSuggestionsState(null);
-        // TODO I put event.preventDefault(); here to prevent submission. Is ok?
-        event.preventDefault();
+
         break;
 
       case 27: // ESC

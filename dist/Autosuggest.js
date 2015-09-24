@@ -48,6 +48,7 @@ var Autosuggest = (function (_Component) {
       suggestionRenderer: _react.PropTypes.func, // Function that renders a given suggestion (must be implemented when suggestions are objects)
       suggestionValue: _react.PropTypes.func, // Function that maps suggestion object to input value (must be implemented when suggestions are objects)
       showWhen: _react.PropTypes.func, // Function that determines whether to show suggestions or not
+      onInputEnterKey: _react.PropTypes.func,
       onSuggestionSelected: _react.PropTypes.func, // This function is called when suggestion is selected via mouse click or Enter
       onSuggestionFocused: _react.PropTypes.func, // This function is called when suggestion is focused via mouse hover or Up/Down keys
       onSuggestionUnfocused: _react.PropTypes.func, // This function is called when suggestion is unfocused via mouse hover or Up/Down keys
@@ -64,6 +65,7 @@ var Autosuggest = (function (_Component) {
       showWhen: function showWhen(input) {
         return input.trim().length > 0;
       },
+      onInputEnterKey: function onInputEnterKey() {},
       onSuggestionSelected: function onSuggestionSelected() {},
       onSuggestionFocused: function onSuggestionFocused() {},
       onSuggestionUnfocused: function onSuggestionUnfocused() {},
@@ -79,8 +81,6 @@ var Autosuggest = (function (_Component) {
         section: 'react-autosuggest__suggestions-section',
         sectionName: 'react-autosuggest__suggestions-section-name',
         sectionSuggestions: 'react-autosuggest__suggestions-section-suggestions',
-
-        // TODO added
         suggestionIsDisabled: 'react-autosuggest__suggestion--disabled'
       }
     },
@@ -166,7 +166,6 @@ var Autosuggest = (function (_Component) {
           return suggestion.suggestions === null ? [] : _this.getEnabledIndexes(suggestion.suggestions);
         }), true);
       } else {
-        //sectionIterator.setData(suggestions === null ? [] : suggestions.length);
         _sectionIterator2['default'].setData(suggestions === null ? [] : this.getEnabledIndexes(suggestions));
       }
     }
@@ -382,6 +381,12 @@ var Autosuggest = (function (_Component) {
       });
     }
   }, {
+    key: 'onInputEnterKey',
+    value: function onInputEnterKey(event) {
+      this.onSuggestionUnfocused();
+      this.props.onInputEnterKey(event);
+    }
+  }, {
     key: 'onSuggestionSelected',
     value: function onSuggestionSelected(event) {
       var focusedSuggestion = this.getFocusedSuggestion();
@@ -420,11 +425,12 @@ var Autosuggest = (function (_Component) {
           // Enter
           if (this.state.valueBeforeUpDown !== null && this.suggestionIsFocused()) {
             this.onSuggestionSelected(event);
+          } else {
+            this.onInputEnterKey(event);
           }
 
           this.setSuggestionsState(null);
-          // TODO I put event.preventDefault(); here to prevent submission. Is ok?
-          event.preventDefault();
+
           break;
 
         case 27:
