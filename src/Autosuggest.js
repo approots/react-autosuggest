@@ -3,6 +3,9 @@ import { findDOMNode } from 'react-dom';
 import debounce from 'debounce';
 import themeable from 'react-themeable';
 import sectionIterator from './sectionIterator';
+import injectTapEventPlugin from 'react-tap-event-plugin';
+
+injectTapEventPlugin();
 
 export default class Autosuggest extends Component {
   static propTypes = {
@@ -548,19 +551,19 @@ export default class Autosuggest extends Component {
         )
       } else {
         return (
-          <li id={this.getSuggestionId(sectionIndex, suggestionIndex)}
-            {...styles}
-            role="option"
-            ref={suggestionRef}
-            key={suggestionRef}
-            data-section-index={sectionIndex}
-            data-suggestion-index={suggestionIndex}
-            onMouseEnter={() => this.onSuggestionMouseEnter(sectionIndex, suggestionIndex)}
-            onMouseLeave={() => this.onSuggestionMouseLeave(sectionIndex, suggestionIndex)}
-            onMouseDown={onSuggestionClick}
-            onTouchStart={onSuggestionClick}>
-            {this.renderSuggestionContent(suggestion)}
-          </li>
+            <li id={this.getSuggestionId(sectionIndex, suggestionIndex)}
+                {...styles}
+                role="option"
+                ref={suggestionRef}
+                key={suggestionRef}
+                data-section-index={sectionIndex}
+                data-suggestion-index={suggestionIndex}
+                onMouseEnter={() => this.onSuggestionMouseEnter(sectionIndex, suggestionIndex)}
+                onMouseLeave={() => this.onSuggestionMouseLeave(sectionIndex, suggestionIndex)}
+                onMouseDown={onSuggestionClick}
+                onTouchTap={onSuggestionClick}>
+              {this.renderSuggestionContent(suggestion)}
+            </li>
         );
       }
     });

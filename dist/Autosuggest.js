@@ -36,6 +36,12 @@ var _sectionIterator = require('./sectionIterator');
 
 var _sectionIterator2 = _interopRequireDefault(_sectionIterator);
 
+var _reactTapEventPlugin = require('react-tap-event-plugin');
+
+var _reactTapEventPlugin2 = _interopRequireDefault(_reactTapEventPlugin);
+
+(0, _reactTapEventPlugin2['default'])();
+
 var Autosuggest = (function (_Component) {
   _inherits(Autosuggest, _Component);
 
@@ -639,7 +645,7 @@ var Autosuggest = (function (_Component) {
                 return _this6.onSuggestionMouseLeave(sectionIndex, suggestionIndex);
               },
               onMouseDown: onSuggestionClick,
-              onTouchStart: onSuggestionClick }),
+              onTouchTap: onSuggestionClick }),
             _this6.renderSuggestionContent(suggestion)
           );
         }
