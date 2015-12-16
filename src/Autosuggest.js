@@ -151,7 +151,10 @@ export default class Autosuggest extends Component {
   }
 
   showSuggestions(input) {
-    const cacheKey = input.toLowerCase();
+	// Hack fix since input can be null when showWhen is true even with no input.
+	input = (input || '');
+    
+	const cacheKey = input.toLowerCase();
 
     this.lastSuggestionsInputValue = input;
 

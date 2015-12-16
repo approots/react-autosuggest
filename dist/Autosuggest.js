@@ -207,6 +207,9 @@ var Autosuggest = (function (_Component) {
     value: function showSuggestions(input) {
       var _this2 = this;
 
+      // Hack fix since input can be null when showWhen is true even with no input.
+      input = input || '';
+
       var cacheKey = input.toLowerCase();
 
       this.lastSuggestionsInputValue = input;
